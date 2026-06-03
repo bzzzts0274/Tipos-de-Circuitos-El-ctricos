@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maqueta Virtual | Tipos de Circuitos Eléctricos</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__glow"></div>
+    <div class="hero__content">
+      <p class="tag">Maqueta virtual interactiva de Física</p>
+      <h1>Tipos de Circuitos Eléctricos</h1>
+      <p class="subtitle">
+        Explora cómo funcionan los circuitos en serie, paralelo y mixto.
+        Enciende la simulación, cambia los valores y observa el recorrido de la corriente eléctrica.
+      </p>
+
+      <div class="hero__cards">
+        <div><strong>3</strong><span>circuitos</span></div>
+        <div><strong>SVG</strong><span>interactivo</span></div>
+        <div><strong>Ohm</strong><span>cálculos básicos</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro card">
+      <h2>¿Qué representa esta maqueta virtual?</h2>
+      <p>
+        Muestra los componentes principales
+        de un circuito eléctrico: batería, interruptor, cables conductores, resistencias o focos y el flujo
+        de corriente. También permite comparar la diferencia entre un circuito en serie, uno en paralelo
+        y uno mixto.
+      </p>
+    </section>
+
+    <section class="tabs card">
+      <h2>Selecciona un circuito</h2>
+      <div class="tab-buttons" role="tablist" aria-label="Tipos de circuitos">
+        <button class="tab-btn active" data-circuit="serie">Circuito en serie</button>
+        <button class="tab-btn" data-circuit="paralelo">Circuito en paralelo</button>
+        <button class="tab-btn" data-circuit="mixto">Circuito mixto</button>
+      </div>
+    </section>
+
+    <section class="simulator-grid">
+      <article class="panel card">
+        <div class="panel__top">
+          <div>
+            <p class="tag">Simulador</p>
+            <h2 id="circuitTitle">Circuito en serie</h2>
+          </div>
+          <button id="powerBtn" class="power-btn" aria-pressed="false">
+            <span class="power-dot"></span>
+            Encender
+          </button>
+        </div>
+
+        <div class="controls">
+          <label>
+            Voltaje de la batería
+            <input id="voltage" type="range" min="3" max="24" value="12" step="1" />
+            <span><b id="voltageValue">12</b> V</span>
+          </label>
+
+          <label>
+            Resistencia R1
+            <input id="r1" type="range" min="5" max="80" value="20" step="5" />
+            <span><b id="r1Value">20</b> Ω</span>
+          </label>
+
+          <label>
+            Resistencia R2
+            <input id="r2" type="range" min="5" max="80" value="20" step="5" />
+            <span><b id="r2Value">20</b> Ω</span>
+          </label>
+
+          <label>
+            Resistencia R3
+            <input id="r3" type="range" min="5" max="80" value="20" step="5" />
+            <span><b id="r3Value">20</b> Ω</span>
+          </label>
+        </div>
+
+        <div class="svg-wrap" id="svgMount"></div>
+
+        <div class="mini-note">
+          <strong>Tip:</strong> pasa el mouse sobre los nombres del circuito para identificar sus componentes.
+        </div>
+      </article>
+
+      <aside class="info card">
+        <p class="tag">Explicación</p>
+        <h2 id="infoTitle">Circuito en serie</h2>
+        <p id="infoDescription"></p>
+
+        <h3>Componentes señalados</h3>
+        <ul id="componentList"></ul>
+
+        <h3>Datos calculados</h3>
+        <div class="stats">
+          <div>
+            <span>Resistencia total</span>
+            <strong id="totalResistance">0 Ω</strong>
+          </div>
+          <div>
+            <span>Corriente total</span>
+            <strong id="totalCurrent">0 A</strong>
+          </div>
+          <div>
+            <span>Comportamiento</span>
+            <strong id="behavior">---</strong>
+          </div>
+        </div>
+
+        <h3>Fórmula usada</h3>
+        <p class="formula" id="formulaText"></p>
+      </aside>
+    </section>
+
+    <section class="comparison card">
+      <h2>Comparación rápida</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo de circuito</th>
+              <th>Conexión</th>
+              <th>Corriente</th>
+              <th>Voltaje</th>
+              <th>Ejemplo cotidiano</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Serie</td>
+              <td>Un solo camino</td>
+              <td>La misma en todos los componentes</td>
+              <td>Se reparte</td>
+              <td>Algunas luces navideñas antiguas</td>
+            </tr>
+            <tr>
+              <td>Paralelo</td>
+              <td>Varias ramas</td>
+              <td>Se divide en cada rama</td>
+              <td>El mismo en cada rama</td>
+              <td>Instalación eléctrica de una casa</td>
+            </tr>
+            <tr>
+              <td>Mixto</td>
+              <td>Combina serie y paralelo</td>
+              <td>Depende de cada sección</td>
+              <td>Depende de la conexión</td>
+              <td>Dispositivos electrónicos</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Proyecto escolar de Física | Maqueta virtual interactiva</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
