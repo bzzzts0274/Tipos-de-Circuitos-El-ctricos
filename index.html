@@ -3,25 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Maqueta Virtual | Tipos de Circuitos Eléctricos</title>
+  <title>Tipos de Circuitos Eléctricos</title>
   <link rel="stylesheet" href="estilos.css" />
 </head>
 <body>
   <header class="hero">
-    <div class="hero__glow"></div>
     <div class="hero__content">
-      <p class="tag">Maqueta virtual interactiva de Física</p>
+      <p class="tag">Maqueta virtual interactiva</p>
       <h1>Tipos de Circuitos Eléctricos</h1>
       <p class="subtitle">
-        Explora cómo funcionan los circuitos en serie, paralelo y mixto.
-        Enciende la simulación, cambia los valores y observa el recorrido de la corriente eléctrica.
+        Enciende el circuito, observa el recorrido de la corriente y rompe focos para comparar qué sucede en serie, paralelo y mixto.
       </p>
-
-      <div class="hero__cards">
-        <div><strong>3</strong><span>circuitos</span></div>
-        <div><strong>SVG</strong><span>interactivo</span></div>
-        <div><strong>Ohm</strong><span>cálculos básicos</span></div>
-      </div>
     </div>
   </header>
 
@@ -29,16 +21,15 @@
     <section class="intro card">
       <h2>¿Qué representa esta maqueta virtual?</h2>
       <p>
-        Muestra los componentes principales
-        de un circuito eléctrico: batería, interruptor, cables conductores, resistencias o focos y el flujo
-        de corriente. También permite comparar la diferencia entre un circuito en serie, uno en paralelo
-        y uno mixto.
+        Esta página web representa una maqueta virtual sobre los tipos de circuitos eléctricos. Permite observar los componentes principales:
+        batería, interruptor, cables conductores, focos o resistencias, nodos y corriente eléctrica. También permite simular fallas
+        rompiendo focos para comparar el comportamiento de cada circuito.
       </p>
     </section>
 
     <section class="tabs card">
       <h2>Selecciona un circuito</h2>
-      <div class="tab-buttons" role="tablist" aria-label="Tipos de circuitos">
+      <div class="tab-buttons">
         <button class="tab-btn active" data-circuit="serie">Circuito en serie</button>
         <button class="tab-btn" data-circuit="paralelo">Circuito en paralelo</button>
         <button class="tab-btn" data-circuit="mixto">Circuito mixto</button>
@@ -52,43 +43,53 @@
             <p class="tag">Simulador</p>
             <h2 id="circuitTitle">Circuito en serie</h2>
           </div>
-          <button id="powerBtn" class="power-btn" aria-pressed="false">
-            <span class="power-dot"></span>
-            Encender
-          </button>
+          <button id="powerBtn" class="power-btn"><span class="power-dot"></span>Encender</button>
         </div>
 
         <div class="controls">
           <label>
             Voltaje de la batería
-            <input id="voltage" type="range" min="3" max="24" value="12" step="1" />
+            <input id="voltage" type="range" min="3" max="24" value="12" step="1">
             <span><b id="voltageValue">12</b> V</span>
           </label>
 
           <label>
             Resistencia R1
-            <input id="r1" type="range" min="5" max="80" value="20" step="5" />
+            <input id="r1" type="range" min="5" max="80" value="20" step="5">
             <span><b id="r1Value">20</b> Ω</span>
           </label>
 
           <label>
             Resistencia R2
-            <input id="r2" type="range" min="5" max="80" value="20" step="5" />
+            <input id="r2" type="range" min="5" max="80" value="20" step="5">
             <span><b id="r2Value">20</b> Ω</span>
           </label>
 
           <label>
             Resistencia R3
-            <input id="r3" type="range" min="5" max="80" value="20" step="5" />
+            <input id="r3" type="range" min="5" max="80" value="20" step="5">
             <span><b id="r3Value">20</b> Ω</span>
           </label>
         </div>
 
-        <div class="svg-wrap" id="svgMount"></div>
-
-        <div class="mini-note">
-          <strong>Tip:</strong> pasa el mouse sobre los nombres del circuito para identificar sus componentes.
+        <div class="failure-box">
+          <h3>Modo de falla: romper focos</h3>
+          <p>Presiona un botón para simular que un foco se rompe y observa qué pasa con el circuito.</p>
+          <div class="failure-buttons">
+            <button class="break-btn" data-bulb="r1">Romper R1</button>
+            <button class="break-btn" data-bulb="r2">Romper R2</button>
+            <button class="break-btn" data-bulb="r3">Romper R3</button>
+            <button id="resetFailures" class="reset-btn">Restaurar focos</button>
+          </div>
         </div>
+
+        <div id="resultBanner" class="result-banner">Circuito listo.</div>
+
+        <div id="svgMount" class="svg-wrap"></div>
+
+        <p class="mini-note">
+          <strong>Tip:</strong> pasa el mouse sobre las etiquetas del circuito para ver qué representa cada componente.
+        </p>
       </article>
 
       <aside class="info card">
@@ -110,7 +111,7 @@
             <strong id="totalCurrent">0 A</strong>
           </div>
           <div>
-            <span>Comportamiento</span>
+            <span>Estado del circuito</span>
             <strong id="behavior">---</strong>
           </div>
         </div>
@@ -118,6 +119,43 @@
         <h3>Fórmula usada</h3>
         <p class="formula" id="formulaText"></p>
       </aside>
+    </section>
+
+    <section class="examples card">
+      <h2>Ejercicio de ejemplo</h2>
+
+      <div class="example-card">
+        <h3>1. Circuito en serie</h3>
+        <p><strong>Problema:</strong> Un circuito en serie tiene una batería de 12 V y tres resistencias: R1 = 2 Ω, R2 = 4 Ω y R3 = 6 Ω. Calcula la resistencia total y la corriente.</p>
+        <div class="example-grid">
+          <div><strong>DATOS</strong><br>V = 12 V<br>R1 = 2 Ω<br>R2 = 4 Ω<br>R3 = 6 Ω</div>
+          <div><strong>FÓRMULAS</strong><br>RT = R1 + R2 + R3<br>I = V / RT</div>
+          <div><strong>SOLUCIÓN</strong><br>RT = 2 + 4 + 6 = 12 Ω<br>I = 12 / 12 = 1 A</div>
+        </div>
+        <p><strong>Resultado:</strong> RT = 12 Ω e I = 1 A.</p>
+      </div>
+
+      <div class="example-card">
+        <h3>2. Circuito en paralelo</h3>
+        <p><strong>Problema:</strong> Un circuito en paralelo tiene una batería de 12 V y tres resistencias: R1 = 6 Ω, R2 = 6 Ω y R3 = 6 Ω. Calcula la resistencia total y la corriente total.</p>
+        <div class="example-grid">
+          <div><strong>DATOS</strong><br>V = 12 V<br>R1 = 6 Ω<br>R2 = 6 Ω<br>R3 = 6 Ω</div>
+          <div><strong>FÓRMULAS</strong><br>1/RT = 1/R1 + 1/R2 + 1/R3<br>I = V / RT</div>
+          <div><strong>SOLUCIÓN</strong><br>1/RT = 1/6 + 1/6 + 1/6 = 3/6<br>RT = 2 Ω<br>I = 12 / 2 = 6 A</div>
+        </div>
+        <p><strong>Resultado:</strong> RT = 2 Ω e I = 6 A.</p>
+      </div>
+
+      <div class="example-card">
+        <h3>3. Circuito mixto</h3>
+        <p><strong>Problema:</strong> Un circuito mixto tiene una batería de 12 V. R1 = 4 Ω está en serie, mientras que R2 = 6 Ω y R3 = 6 Ω están en paralelo. Calcula la resistencia total y la corriente.</p>
+        <div class="example-grid">
+          <div><strong>DATOS</strong><br>V = 12 V<br>R1 = 4 Ω<br>R2 = 6 Ω<br>R3 = 6 Ω</div>
+          <div><strong>FÓRMULAS</strong><br>RP = 1 / (1/R2 + 1/R3)<br>RT = R1 + RP<br>I = V / RT</div>
+          <div><strong>SOLUCIÓN</strong><br>RP = 1 / (1/6 + 1/6) = 3 Ω<br>RT = 4 + 3 = 7 Ω<br>I = 12 / 7 = 1.71 A</div>
+        </div>
+        <p><strong>Resultado:</strong> RT = 7 Ω e I ≈ 1.71 A.</p>
+      </div>
     </section>
 
     <section class="comparison card">
@@ -128,8 +166,8 @@
             <tr>
               <th>Tipo de circuito</th>
               <th>Conexión</th>
+              <th>Si se rompe un foco</th>
               <th>Corriente</th>
-              <th>Voltaje</th>
               <th>Ejemplo cotidiano</th>
             </tr>
           </thead>
@@ -137,23 +175,23 @@
             <tr>
               <td>Serie</td>
               <td>Un solo camino</td>
+              <td>Se apaga todo el circuito</td>
               <td>La misma en todos los componentes</td>
-              <td>Se reparte</td>
-              <td>Algunas luces navideñas antiguas</td>
+              <td>Luces navideñas antiguas</td>
             </tr>
             <tr>
               <td>Paralelo</td>
               <td>Varias ramas</td>
+              <td>Solo se apaga la rama dañada</td>
               <td>Se divide en cada rama</td>
-              <td>El mismo en cada rama</td>
               <td>Instalación eléctrica de una casa</td>
             </tr>
             <tr>
               <td>Mixto</td>
-              <td>Combina serie y paralelo</td>
+              <td>Serie y paralelo</td>
+              <td>Depende de qué parte falle</td>
               <td>Depende de cada sección</td>
-              <td>Depende de la conexión</td>
-              <td>Dispositivos electrónicos</td>
+              <td>Aparatos electrónicos</td>
             </tr>
           </tbody>
         </table>
@@ -162,7 +200,7 @@
   </main>
 
   <footer>
-    <p>Proyecto Física | Maqueta virtual interactiva | Hecho por: Romero Gutiérrez Javier Santiago | Bachillerado SEP SEM4<p>
+    <p>Proyecto Física | Maqueta virtual interactiva | Javier Santiago Romero Gutiérrez | Profesora: Espinosa García Dulce María | SEM4</p>
   </footer>
 
   <script src="script.js"></script>
