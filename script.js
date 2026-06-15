@@ -2,21 +2,26 @@ const circuits = {
   serie: {
     title: "Circuito en serie",
     description:
-      "En un circuito en serie, los componentes están conectados uno después de otro en un solo camino. La corriente eléctrica pasa por todos los elementos en el mismo recorrido. Si un foco se desconecta o se quema, el circuito se abre y todos dejan de funcionar.",
+      "En un circuito en serie, los componentes están conectados uno después de otro en un solo camino. La corriente eléctrica pasa por todos los elementos en el mismo recorrido. Si un foco se rompe, el circuito queda abierto y todos los focos se apagan.",
     components: [
       "Batería o fuente de voltaje: entrega la energía eléctrica.",
       "Interruptor: permite abrir o cerrar el paso de corriente.",
       "Cables conductores: transportan la corriente por el circuito.",
-      "Resistencia o foco R1: primer receptor de energía.",
-      "Resistencia o foco R2: segundo receptor de energía.",
-      "Resistencia o foco R3: tercer receptor de energía.",
+      "Foco o resistencia R1: primer receptor de energía.",
+      "Foco o resistencia R2: segundo receptor de energía.",
+      "Foco o resistencia R3: tercer receptor de energía.",
       "Corriente eléctrica: flujo de cargas que recorre un solo camino."
     ],
-    behavior: "Un solo camino",
     formula: "Serie: RT = R1 + R2 + R3  |  I = V / RT",
-    calc: (v, r1, r2, r3) => {
+    calc: (v, r1, r2, r3, broken) => {
+      if (broken.r1 || broken.r2 || broken.r3) return { rt: Infinity, i: 0, status: "Circuito abierto", activeBulbs: [], activePaths: [] };
       const rt = r1 + r2 + r3;
-      return { rt, i: v / rt };
+      return { rt, i: v / rt, status: "Funcionando: un solo camino", activeBulbs: ["r1", "r2", "r3"], activePaths: ["main"] };
+    },
+    failureMessage: (broken) => {
+      const damaged = brokenNames(broken);
+      if (!damaged.length) return "No hay focos rotos. El circuito en serie funciona completo cuando está encendido.";
+      return `Se rompió ${damaged.join(", ")}. En serie, una sola falla abre el circuito y todos los focos se apagan.`;
     },
     svg: () => `
       <svg viewBox="0 0 900 560" class="circuit-svg" aria-label="Circuito en serie">
@@ -25,7 +30,7 @@ const circuits = {
         </defs>
 
         <path class="wire" d="M145 405 L145 165 L260 165 M330 165 L395 165 M465 165 L530 165 M600 165 L710 165 L710 405 L145 405" />
-        <path class="wire wire-live live-path" d="M145 405 L145 165 L260 165 M330 165 L395 165 M465 165 L530 165 M600 165 L710 165 L710 405 L145 405" />
+        <path class="wire wire-live live-path path-main" d="M145 405 L145 165 L260 165 M330 165 L395 165 M465 165 L530 165 M600 165 L710 165 L710 405 L145 405" />
 
         <g class="battery">
           <line x1="115" y1="335" x2="175" y2="335" />
@@ -33,39 +38,25 @@ const circuits = {
           <text x="94" y="315" fill="#73ff99" font-size="18" font-weight="700">+  -</text>
         </g>
 
-        <line class="switch-line switch" x1="236" y1="165" x2="304" y2="125" />
+        <line class="switch-line switch" x1="236" y1="165" x2="304" y2="125" data-open-x2="304" data-open-y2="125" data-closed-x2="315" data-closed-y2="165" />
         <circle cx="235" cy="165" r="8" fill="#fff" />
         <circle cx="315" cy="165" r="8" fill="#fff" />
 
-        <g class="lamp lamp1">
-          <circle class="lamp-glass lamp-bulb" cx="430" cy="165" r="34" />
-          <path d="M412 165 Q430 140 448 165 Q430 190 412 165" fill="none" stroke="#fff" stroke-width="3"/>
-          <text x="417" y="222" fill="#fff" font-size="18" font-weight="700">R1</text>
-        </g>
+        ${lamp(430, 165, "R1", "r1")}
+        ${lamp(565, 165, "R2", "r2")}
+        ${lamp(710, 405, "R3", "r3")}
 
-        <g class="lamp lamp2">
-          <circle class="lamp-glass lamp-bulb" cx="565" cy="165" r="34" />
-          <path d="M547 165 Q565 140 583 165 Q565 190 547 165" fill="none" stroke="#fff" stroke-width="3"/>
-          <text x="552" y="222" fill="#fff" font-size="18" font-weight="700">R2</text>
-        </g>
-
-        <g class="lamp lamp3">
-          <circle class="lamp-glass lamp-bulb" cx="710" cy="405" r="34" />
-          <path d="M692 405 Q710 380 728 405 Q710 430 692 405" fill="none" stroke="#fff" stroke-width="3"/>
-          <text x="697" y="462" fill="#fff" font-size="18" font-weight="700">R3</text>
-        </g>
-
-        <circle class="electron e1" r="6">
+        <circle class="electron electron-main e1" r="6">
           <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
             <mpath href="#seriePath" />
           </animateMotion>
         </circle>
-        <circle class="electron e2" r="6">
+        <circle class="electron electron-main e2" r="6">
           <animateMotion dur="4s" begin="1s" repeatCount="indefinite" rotate="auto">
             <mpath href="#seriePath" />
           </animateMotion>
         </circle>
-        <circle class="electron e3" r="6">
+        <circle class="electron electron-main e3" r="6">
           <animateMotion dur="4s" begin="2s" repeatCount="indefinite" rotate="auto">
             <mpath href="#seriePath" />
           </animateMotion>
@@ -85,7 +76,7 @@ const circuits = {
   paralelo: {
     title: "Circuito en paralelo",
     description:
-      "En un circuito en paralelo, los componentes están conectados en ramas independientes. Cada rama recibe el mismo voltaje de la fuente. Si un foco se desconecta, los demás pueden seguir funcionando porque todavía tienen su propio camino para la corriente.",
+      "En un circuito en paralelo, los componentes están conectados en ramas independientes. Cada rama recibe el mismo voltaje de la fuente. Si un foco se rompe, los demás pueden seguir funcionando porque tienen otro camino para la corriente.",
     components: [
       "Batería o fuente de voltaje: proporciona la energía al circuito.",
       "Interruptor general: controla el encendido de todo el circuito.",
@@ -95,11 +86,21 @@ const circuits = {
       "Rama 3 con R3: tercer camino independiente.",
       "Nodos de unión: puntos donde la corriente se divide o se reúne."
     ],
-    behavior: "Varias ramas",
     formula: "Paralelo: 1/RT = 1/R1 + 1/R2 + 1/R3  |  ITotal = V / RT",
-    calc: (v, r1, r2, r3) => {
-      const rt = 1 / (1 / r1 + 1 / r2 + 1 / r3);
-      return { rt, i: v / rt };
+    calc: (v, r1, r2, r3, broken) => {
+      const available = [];
+      if (!broken.r1) available.push(["r1", r1]);
+      if (!broken.r2) available.push(["r2", r2]);
+      if (!broken.r3) available.push(["r3", r3]);
+      if (available.length === 0) return { rt: Infinity, i: 0, status: "Circuito abierto: todas las ramas fallaron", activeBulbs: [], activePaths: [] };
+      const rt = 1 / available.reduce((sum, item) => sum + 1 / item[1], 0);
+      return { rt, i: v / rt, status: available.length === 3 ? "Funcionando: tres ramas" : `Funcionando con ${available.length} rama(s) activa(s)`, activeBulbs: available.map(item => item[0]), activePaths: available.map(item => item[0]) };
+    },
+    failureMessage: (broken) => {
+      const damaged = brokenNames(broken);
+      if (!damaged.length) return "No hay focos rotos. Las tres ramas del circuito paralelo funcionan.";
+      if (damaged.length === 3) return "Se rompieron todos los focos. Como ya no queda ninguna rama completa, la corriente total es 0 A.";
+      return `Se rompió ${damaged.join(", ")}. En paralelo, solo se apaga la rama dañada; las demás ramas siguen funcionando.`;
     },
     svg: () => `
       <svg viewBox="0 0 900 560" class="circuit-svg" aria-label="Circuito en paralelo">
@@ -114,10 +115,9 @@ const circuits = {
         <path class="wire" d="M300 280 L420 280 M500 280 L690 280" />
         <path class="wire" d="M300 400 L420 400 M500 400 L690 400" />
 
-        <path class="wire wire-live live-path" d="M145 420 L145 145 L250 145 M320 145 L690 145 L690 420 L145 420" />
-        <path class="wire wire-live live-path" d="M300 145 L300 400 M690 145 L690 400" />
-        <path class="wire wire-live live-path" d="M300 280 L420 280 M500 280 L690 280" />
-        <path class="wire wire-live live-path" d="M300 400 L420 400 M500 400 L690 400" />
+        <path class="wire wire-live live-path path-r1" d="M145 420 L145 145 L250 145 M320 145 L690 145 L690 420 L145 420" />
+        <path class="wire wire-live live-path path-r2" d="M145 420 L145 145 L300 145 L300 280 L420 280 M500 280 L690 280 L690 420 L145 420" />
+        <path class="wire wire-live live-path path-r3" d="M145 420 L145 145 L300 145 L300 400 L420 400 M500 400 L690 400 L690 420 L145 420" />
 
         <g class="battery">
           <line x1="115" y1="350" x2="175" y2="350" />
@@ -125,7 +125,7 @@ const circuits = {
           <text x="94" y="330" fill="#73ff99" font-size="18" font-weight="700">+  -</text>
         </g>
 
-        <line class="switch-line switch" x1="250" y1="145" x2="315" y2="105" />
+        <line class="switch-line switch" x1="250" y1="145" x2="315" y2="105" data-open-x2="315" data-open-y2="105" data-closed-x2="325" data-closed-y2="145" />
         <circle cx="250" cy="145" r="8" fill="#fff" />
         <circle cx="325" cy="145" r="8" fill="#fff" />
 
@@ -136,35 +136,21 @@ const circuits = {
         <circle cx="300" cy="400" r="9" fill="#42e8ff"/>
         <circle cx="690" cy="400" r="9" fill="#42e8ff"/>
 
-        <g class="lamp lamp1">
-          <circle class="lamp-glass lamp-bulb" cx="460" cy="145" r="34" />
-          <path d="M442 145 Q460 120 478 145 Q460 170 442 145" fill="none" stroke="#fff" stroke-width="3"/>
-          <text x="447" y="202" fill="#fff" font-size="18" font-weight="700">R1</text>
-        </g>
+        ${lamp(460, 145, "R1", "r1")}
+        ${lamp(460, 280, "R2", "r2")}
+        ${lamp(460, 400, "R3", "r3")}
 
-        <g class="lamp lamp2">
-          <circle class="lamp-glass lamp-bulb" cx="460" cy="280" r="34" />
-          <path d="M442 280 Q460 255 478 280 Q460 305 442 280" fill="none" stroke="#fff" stroke-width="3"/>
-          <text x="447" y="337" fill="#fff" font-size="18" font-weight="700">R2</text>
-        </g>
-
-        <g class="lamp lamp3">
-          <circle class="lamp-glass lamp-bulb" cx="460" cy="400" r="34" />
-          <path d="M442 400 Q460 375 478 400 Q460 425 442 400" fill="none" stroke="#fff" stroke-width="3"/>
-          <text x="447" y="457" fill="#fff" font-size="18" font-weight="700">R3</text>
-        </g>
-
-        <circle class="electron e1" r="6">
+        <circle class="electron electron-r1 e1" r="6">
           <animateMotion dur="3.5s" repeatCount="indefinite" rotate="auto">
             <mpath href="#parPath1" />
           </animateMotion>
         </circle>
-        <circle class="electron e2" r="6">
+        <circle class="electron electron-r2 e2" r="6">
           <animateMotion dur="3.8s" repeatCount="indefinite" rotate="auto">
             <mpath href="#parPath2" />
           </animateMotion>
         </circle>
-        <circle class="electron e3" r="6">
+        <circle class="electron electron-r3 e3" r="6">
           <animateMotion dur="4.1s" repeatCount="indefinite" rotate="auto">
             <mpath href="#parPath3" />
           </animateMotion>
@@ -184,7 +170,7 @@ const circuits = {
   mixto: {
     title: "Circuito mixto",
     description:
-      "Un circuito mixto combina conexiones en serie y conexiones en paralelo. Algunas partes comparten un solo camino, mientras que otras se dividen en ramas. Este tipo de conexión se usa en sistemas más completos porque permite controlar y distribuir la energía de diferentes formas.",
+      "Un circuito mixto combina conexiones en serie y en paralelo. Algunas partes tienen un solo camino, mientras que otras se dividen en ramas. Por eso, el efecto de una falla depende de dónde se rompe el foco.",
     components: [
       "Batería o fuente de voltaje: alimenta todo el circuito.",
       "Interruptor: controla el encendido general.",
@@ -194,12 +180,23 @@ const circuits = {
       "Cables conductores: unen todos los componentes.",
       "Corriente eléctrica: primero pasa por R1 y después se divide entre R2 y R3."
     ],
-    behavior: "Serie + paralelo",
-    formula: "Mixto: RParalelo = 1 / (1/R2 + 1/R3)  |  RT = R1 + RParalelo  |  I = V / RT",
-    calc: (v, r1, r2, r3) => {
-      const rp = 1 / (1 / r2 + 1 / r3);
+    formula: "Mixto: RP = 1 / (1/R2 + 1/R3)  |  RT = R1 + RP  |  I = V / RT",
+    calc: (v, r1, r2, r3, broken) => {
+      if (broken.r1) return { rt: Infinity, i: 0, status: "Circuito abierto: falló R1 en serie", activeBulbs: [], activePaths: [] };
+      const parallel = [];
+      if (!broken.r2) parallel.push(["r2", r2]);
+      if (!broken.r3) parallel.push(["r3", r3]);
+      if (parallel.length === 0) return { rt: Infinity, i: 0, status: "Circuito abierto: fallaron las ramas paralelas", activeBulbs: [], activePaths: [] };
+      const rp = parallel.length === 1 ? parallel[0][1] : 1 / parallel.reduce((sum, item) => sum + 1 / item[1], 0);
       const rt = r1 + rp;
-      return { rt, i: v / rt };
+      return { rt, i: v / rt, status: parallel.length === 2 ? "Funcionando: serie + paralelo" : "Funcionando con una rama paralela", activeBulbs: ["r1", ...parallel.map(item => item[0])], activePaths: parallel.map(item => item[0]) };
+    },
+    failureMessage: (broken) => {
+      const damaged = brokenNames(broken);
+      if (!damaged.length) return "No hay focos rotos. El circuito mixto funciona con R1 en serie y R2/R3 en paralelo.";
+      if (broken.r1) return "Se rompió R1. Como R1 está en serie antes de la división, todo el circuito queda abierto y se apaga.";
+      if (broken.r2 && broken.r3) return "Se rompieron R2 y R3. Aunque R1 esté bien, ya no queda ninguna rama paralela completa.";
+      return `Se rompió ${damaged.join(", ")}. En el circuito mixto, la rama dañada se apaga, pero la otra rama paralela todavía puede funcionar.`;
     },
     svg: () => `
       <svg viewBox="0 0 900 560" class="circuit-svg" aria-label="Circuito mixto">
@@ -212,9 +209,8 @@ const circuits = {
         <path class="wire" d="M430 155 L430 305 M700 155 L700 305" />
         <path class="wire" d="M430 305 L555 305 M625 305 L700 305" />
 
-        <path class="wire wire-live live-path" d="M145 420 L145 155 L235 155 M305 155 L395 155 M465 155 L610 155 M680 155 L700 155 L700 420 L145 420" />
-        <path class="wire wire-live live-path" d="M430 155 L430 305 M700 155 L700 305" />
-        <path class="wire wire-live live-path" d="M430 305 L555 305 M625 305 L700 305" />
+        <path class="wire wire-live live-path path-r2" d="M145 420 L145 155 L235 155 M305 155 L395 155 M465 155 L610 155 M680 155 L700 155 L700 420 L145 420" />
+        <path class="wire wire-live live-path path-r3" d="M145 420 L145 155 L235 155 M305 155 L395 155 M465 155 L430 155 L430 305 L555 305 M625 305 L700 305 L700 420 L145 420" />
 
         <g class="battery">
           <line x1="115" y1="350" x2="175" y2="350" />
@@ -222,46 +218,27 @@ const circuits = {
           <text x="94" y="330" fill="#73ff99" font-size="18" font-weight="700">+  -</text>
         </g>
 
-        <line class="switch-line switch" x1="235" y1="155" x2="300" y2="115" />
+        <line class="switch-line switch" x1="235" y1="155" x2="300" y2="115" data-open-x2="300" data-open-y2="115" data-closed-x2="310" data-closed-y2="155" />
         <circle cx="235" cy="155" r="8" fill="#fff" />
         <circle cx="310" cy="155" r="8" fill="#fff" />
 
-        <g class="lamp lamp1">
-          <circle class="lamp-glass lamp-bulb" cx="430" cy="155" r="34" />
-          <path d="M412 155 Q430 130 448 155 Q430 180 412 155" fill="none" stroke="#fff" stroke-width="3"/>
-          <text x="417" y="212" fill="#fff" font-size="18" font-weight="700">R1</text>
-        </g>
+        ${lamp(430, 155, "R1", "r1")}
+        ${lamp(645, 155, "R2", "r2")}
+        ${lamp(590, 305, "R3", "r3")}
 
         <circle cx="430" cy="155" r="9" fill="#42e8ff"/>
         <circle cx="700" cy="155" r="9" fill="#42e8ff"/>
         <circle cx="430" cy="305" r="9" fill="#42e8ff"/>
         <circle cx="700" cy="305" r="9" fill="#42e8ff"/>
 
-        <g class="lamp lamp2">
-          <circle class="lamp-glass lamp-bulb" cx="645" cy="155" r="34" />
-          <path d="M627 155 Q645 130 663 155 Q645 180 627 155" fill="none" stroke="#fff" stroke-width="3"/>
-          <text x="632" y="212" fill="#fff" font-size="18" font-weight="700">R2</text>
-        </g>
-
-        <g class="lamp lamp3">
-          <circle class="lamp-glass lamp-bulb" cx="590" cy="305" r="34" />
-          <path d="M572 305 Q590 280 608 305 Q590 330 572 305" fill="none" stroke="#fff" stroke-width="3"/>
-          <text x="577" y="362" fill="#fff" font-size="18" font-weight="700">R3</text>
-        </g>
-
-        <circle class="electron e1" r="6">
+        <circle class="electron electron-r2 e1" r="6">
           <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
             <mpath href="#mixPath1" />
           </animateMotion>
         </circle>
-        <circle class="electron e2" r="6">
+        <circle class="electron electron-r3 e2" r="6">
           <animateMotion dur="4.2s" begin="0.7s" repeatCount="indefinite" rotate="auto">
             <mpath href="#mixPath2" />
-          </animateMotion>
-        </circle>
-        <circle class="electron e3" r="6">
-          <animateMotion dur="4s" begin="1.4s" repeatCount="indefinite" rotate="auto">
-            <mpath href="#mixPath1" />
           </animateMotion>
         </circle>
 
@@ -279,7 +256,8 @@ const circuits = {
 
 const state = {
   selected: "serie",
-  power: false
+  power: false,
+  broken: { r1: false, r2: false, r3: false }
 };
 
 const svgMount = document.getElementById("svgMount");
@@ -291,6 +269,7 @@ const totalResistance = document.getElementById("totalResistance");
 const totalCurrent = document.getElementById("totalCurrent");
 const behavior = document.getElementById("behavior");
 const formulaText = document.getElementById("formulaText");
+const resultBanner = document.getElementById("resultBanner");
 const powerBtn = document.getElementById("powerBtn");
 
 const voltage = document.getElementById("voltage");
@@ -303,6 +282,18 @@ const r1Value = document.getElementById("r1Value");
 const r2Value = document.getElementById("r2Value");
 const r3Value = document.getElementById("r3Value");
 
+function lamp(cx, cy, name, key) {
+  return `
+    <g class="lamp lamp-${key}" data-bulb="${key}">
+      <circle class="lamp-glass lamp-bulb" cx="${cx}" cy="${cy}" r="34" />
+      <path d="M${cx - 18} ${cy} Q${cx} ${cy - 25} ${cx + 18} ${cy} Q${cx} ${cy + 25} ${cx - 18} ${cy}" fill="none" stroke="#fff" stroke-width="3"/>
+      <path class="crack" d="M${cx - 14} ${cy - 18} L${cx - 2} ${cy - 4} L${cx - 10} ${cy + 8} L${cx + 7} ${cy + 21}" />
+      <text class="broken-mark" x="${cx - 12}" y="${cy + 12}">✕</text>
+      <text x="${cx - 13}" y="${cy + 57}" fill="#fff" font-size="18" font-weight="700">${name}</text>
+    </g>
+  `;
+}
+
 function label(x, y, w, text, tip) {
   return `
     <g class="label" data-tip="${tip}">
@@ -312,86 +303,123 @@ function label(x, y, w, text, tip) {
   `;
 }
 
+function brokenNames(broken) {
+  return Object.keys(broken)
+    .filter(key => broken[key])
+    .map(key => key.toUpperCase());
+}
+
 function renderCircuit() {
+  state.broken = { r1: false, r2: false, r3: false };
+
   const data = circuits[state.selected];
 
   circuitTitle.textContent = data.title;
   infoTitle.textContent = data.title;
   infoDescription.textContent = data.description;
-  behavior.textContent = data.behavior;
   formulaText.textContent = data.formula;
-
   componentList.innerHTML = data.components.map(item => `<li>${item}</li>`).join("");
   svgMount.innerHTML = data.svg();
 
-  updatePowerVisual();
+  updateBreakButtons();
   updateMath();
   attachTooltips();
 }
 
+function getValues() {
+  return {
+    v: Number(voltage.value),
+    r1: Number(r1.value),
+    r2: Number(r2.value),
+    r3: Number(r3.value)
+  };
+}
+
 function updateMath() {
-  const v = Number(voltage.value);
-  const rv1 = Number(r1.value);
-  const rv2 = Number(r2.value);
-  const rv3 = Number(r3.value);
+  const values = getValues();
 
-  voltageValue.textContent = v;
-  r1Value.textContent = rv1;
-  r2Value.textContent = rv2;
-  r3Value.textContent = rv3;
+  voltageValue.textContent = values.v;
+  r1Value.textContent = values.r1;
+  r2Value.textContent = values.r2;
+  r3Value.textContent = values.r3;
 
-  const result = circuits[state.selected].calc(v, rv1, rv2, rv3);
-  totalResistance.textContent = `${result.rt.toFixed(2)} Ω`;
+  const data = circuits[state.selected];
+  const result = data.calc(values.v, values.r1, values.r2, values.r3, state.broken);
+
+  totalResistance.textContent = result.rt === Infinity ? "∞ Ω" : `${result.rt.toFixed(2)} Ω`;
   totalCurrent.textContent = state.power ? `${result.i.toFixed(3)} A` : "0 A";
+  behavior.textContent = state.power ? result.status : "Apagado";
 
-  const bulbs = document.querySelectorAll(".lamp-bulb");
-  const intensity = Math.min(1, result.i / 0.55);
+  resultBanner.textContent = data.failureMessage(state.broken);
+  resultBanner.classList.remove("warning", "good");
+  resultBanner.classList.add(brokenNames(state.broken).length ? "warning" : "good");
 
-  bulbs.forEach(bulb => {
-    if (state.power) {
+  updateBulbVisuals(result);
+  updatePowerVisual(result);
+}
+
+function updateBulbVisuals(result) {
+  ["r1", "r2", "r3"].forEach(key => {
+    const lampEl = document.querySelector(`.lamp-${key}`);
+    const bulb = lampEl?.querySelector(".lamp-bulb");
+    if (!lampEl || !bulb) return;
+
+    lampEl.classList.toggle("broken", state.broken[key]);
+    bulb.classList.remove("lamp-on");
+
+    if (state.power && result.activeBulbs.includes(key) && !state.broken[key]) {
       bulb.classList.add("lamp-on");
+      const intensity = Math.min(1, result.i / 0.55);
       bulb.style.opacity = 0.45 + intensity * 0.55;
     } else {
-      bulb.classList.remove("lamp-on");
       bulb.style.opacity = 1;
     }
   });
+}
 
-  const electrons = document.querySelectorAll(".electron");
-  electrons.forEach(e => {
-    e.style.animationDuration = `${Math.max(0.35, 1.1 - intensity * 0.55)}s`;
+function updatePowerVisual(result) {
+  const svg = document.querySelector(".circuit-svg");
+  const currentResult = result || circuits[state.selected].calc(...Object.values(getValues()), state.broken);
+
+  powerBtn.classList.toggle("on", state.power);
+  powerBtn.innerHTML = state.power ? `<span class="power-dot"></span>Apagar` : `<span class="power-dot"></span>Encender`;
+
+  if (svg) svg.classList.toggle("running", state.power && currentResult.i > 0);
+
+  document.querySelectorAll(".live-path").forEach(path => {
+    const pathKey = [...path.classList].find(cls => cls.startsWith("path-"))?.replace("path-", "");
+    path.style.opacity = state.power && currentResult.activePaths.includes(pathKey) ? "1" : "0";
+  });
+
+  document.querySelectorAll(".electron").forEach(electron => {
+    const electronKey = [...electron.classList].find(cls => cls.startsWith("electron-"))?.replace("electron-", "");
+    const active = state.power && currentResult.activePaths.includes(electronKey);
+    electron.classList.toggle("active", active);
+    electron.classList.toggle("inactive", !active);
+  });
+
+  document.querySelectorAll(".switch").forEach(sw => {
+    sw.classList.toggle("closed", state.power);
+    if (state.power) {
+      sw.setAttribute("x2", sw.dataset.closedX2);
+      sw.setAttribute("y2", sw.dataset.closedY2);
+    } else {
+      sw.setAttribute("x2", sw.dataset.openX2);
+      sw.setAttribute("y2", sw.dataset.openY2);
+    }
   });
 }
 
-function updatePowerVisual() {
-  const svg = document.querySelector(".circuit-svg");
-  const livePaths = document.querySelectorAll(".live-path");
-  const switches = document.querySelectorAll(".switch");
-
-  powerBtn.classList.toggle("on", state.power);
-  powerBtn.setAttribute("aria-pressed", String(state.power));
-  powerBtn.innerHTML = state.power
-    ? `<span class="power-dot"></span> Apagar`
-    : `<span class="power-dot"></span> Encender`;
-
-  if (svg) svg.classList.toggle("running", state.power);
-
-  livePaths.forEach(path => {
-    path.style.opacity = state.power ? "1" : "0";
-  });
-
-  switches.forEach(sw => {
-    sw.classList.toggle("closed", state.power);
-    if (state.power) {
-      sw.setAttribute("x2", Number(sw.getAttribute("x1")) + 75);
-      sw.setAttribute("y2", sw.getAttribute("y1"));
-    }
+function updateBreakButtons() {
+  document.querySelectorAll(".break-btn").forEach(btn => {
+    const key = btn.dataset.bulb;
+    btn.classList.toggle("broken", state.broken[key]);
+    btn.textContent = state.broken[key] ? `Restaurar ${key.toUpperCase()}` : `Romper ${key.toUpperCase()}`;
   });
 }
 
 powerBtn.addEventListener("click", () => {
   state.power = !state.power;
-  updatePowerVisual();
   updateMath();
 });
 
@@ -400,8 +428,24 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     state.selected = btn.dataset.circuit;
+    state.power = false;
     renderCircuit();
   });
+});
+
+document.querySelectorAll(".break-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const key = btn.dataset.bulb;
+    state.broken[key] = !state.broken[key];
+    updateBreakButtons();
+    updateMath();
+  });
+});
+
+document.getElementById("resetFailures").addEventListener("click", () => {
+  state.broken = { r1: false, r2: false, r3: false };
+  updateBreakButtons();
+  updateMath();
 });
 
 [voltage, r1, r2, r3].forEach(input => {
